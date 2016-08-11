@@ -3,13 +3,16 @@ Example kubernetes config files for configuring dex to tie into active directory
 
 Configure your kube api server with the following flags (see https://github.com/coreos/dex/tree/master/contrib/k8s for more info):
 
-```    - --oidc-issuer-url=https://dex.[your domain here].com %>
+```
+    - --oidc-issuer-url=https://dex.[your domain here].com %>
     - --oidc-client-id=[client ID returned when configuring dex]
-    - --oidc-username-claim=email [this overrides the field that kube considers a username in the returned oidc token]```
+    - --oidc-username-claim=email [this overrides the field that kube considers a username in the returned oidc token]
+```
 
 Once you've logged in dex will return a token, paste it into your `~/.kube/config` as shown below.
 
-```apiVersion: v1
+```
+apiVersion: v1
 clusters:
 - cluster:
     server: [your api server here]
