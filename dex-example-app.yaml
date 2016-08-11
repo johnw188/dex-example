@@ -1,0 +1,75 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: dex
+    role: example-app
+  name: dex-example
+  namespace: dex
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dex
+        role: example-app
+    spec:
+      containers:
+          - image: quay.io/coreos/dex-login:3
+            name: dex-worker
+            command:
+              - "/opt/dex/bin/example-app"
+              - --redirect-url=https://kubernetes-auth.[your domain here].com/callback
+              - --client-id=[client id from dex config]
+              - --client-secret=[client secret from dex config (could be put in a kubernetes secret and referenced here)]
+              - --discovery=https://dex.[your domain here].com
+              - --listen=http://127.0.0.1:5555
+            ports:
+            - containerPort: 5555
+              name: example-port
+            volumeMounts:
+              - name: ca
+                mountPath: /etc/ca-certificates
+                readOnly: true
+              - name: ssl
+                mountPath: /etc/ssl
+                readOnly: true
+      volumes:
+        - name: ca
+          hostPath:
+            path: /usr/share/ca-certificates
+        - name: ssl
+          hostPath:
+            path: /etc/ssl
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dex-example
+  namespace: dex
+spec:
+  ports:
+    - name: example-port
+      port: 5555
+  selector:
+    app: dex
+    role: example-app
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: dex-example
+  namespace: dex
+spec:
+  rules:
+  - host: kubernetes-auth.[your url here].com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: dex-example
+          servicePort: 5555
